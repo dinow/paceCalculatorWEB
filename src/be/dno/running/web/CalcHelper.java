@@ -27,13 +27,9 @@ public class CalcHelper {
 	private static String toDoubleDecimal(double paramInt){
 		return df.format(paramInt);
 	}
-	
-	private static Double toDouble(String input){
-		try {
-			return df.parse(input).doubleValue();
-		} catch (ParseException e) {
-			return Double.valueOf(input);
-		}
+
+	private static Double toDouble(String input) throws ParseException{
+		return df.parse(input).doubleValue();
 	}
 
 	/**
@@ -43,76 +39,81 @@ public class CalcHelper {
 	 */
 	public static CalculationResult calculate(CalculationResult crInput){
 		CalculationResult crOutput = new CalculationResult();
-		//Check if vma and % vma is filled in
-		if(!crInput.getVma().isEmpty()){
-			if(!crInput.getPourcVMA().isEmpty()){
-				double vma = toDouble(crInput.getVma());
-				double pVMA = toDouble(crInput.getPourcVMA());
-				if (crInput.getVitesse().isEmpty()){
-					double speed = vma * (pVMA/100);
-					crInput.setVitesse(toDoubleDecimal(speed));
+		try{
+			//Check if vma and % vma is filled in
+			if(!crInput.getVma().isEmpty()){
+				crOutput.setVma(crInput.getVma());
+				if(!crInput.getPourcVMA().isEmpty()){
+					double vma = toDouble(crInput.getVma());
+					double pVMA = toDouble(crInput.getPourcVMA());
+					if (crInput.getVitesse().isEmpty()){
+						double speed = vma * (pVMA/100);
+						crInput.setVitesse(toDoubleDecimal(speed));
+					}
 				}
 			}
-		}
-		if(!crInput.getKms().isEmpty()){//on a les kms
-			crOutput.setKms(crInput.getKms());
-			double kms = toDouble(crInput.getKms());
+			if(!crInput.getKms().isEmpty()){//on a les kms
+				crOutput.setKms(crInput.getKms());
+				double kms = toDouble(crInput.getKms());
 
-			if(!crInput.getVitesse().isEmpty()){//Calcul du temps à mettre pour cette distance à cette vitesse
+				if(!crInput.getVitesse().isEmpty()){//Calcul du temps à mettre pour cette distance à cette vitesse
+					double speed = toDouble(crInput.getVitesse());
+					double secondsForOneKilo = 3600 / speed;
+					double totalSecondForDistance = kms * secondsForOneKilo;
+					crOutput.setTemps(toTime(totalSecondForDistance));
+				}
+				if(!crInput.getAllure().isEmpty()){//Calcul du temps à mettre pour cette distance à cette allure
+					double secondsForOneKilo = getTotSecs(crInput.getAllure());
+					double totalSecondForDistance = kms * secondsForOneKilo;
+					crOutput.setTemps(toTime(totalSecondForDistance));
+				}
+				if(!crInput.getTemps().isEmpty()){ //Calcul vitesse et allures pour cette distance et ce temps
+					double secondsTotal = getTotSecs(crInput.getTemps());
+					double secondsForOneKilo = secondsTotal / kms;
+					crOutput.setVitesse(toDoubleDecimal(3600/secondsForOneKilo));
+					crOutput.setAllure(toTime(secondsForOneKilo));
+				}
+			}
+			if (!crInput.getTemps().isEmpty()){//on a le temps
+				crOutput.setTemps(crInput.getTemps());
+				double totalTime = getTotSecs(crInput.getTemps());
+				if(!crInput.getVitesse().isEmpty()){
+					double speed = toDouble(crInput.getVitesse());
+					double secondsForOneKilo = 3600 / speed;
+					crOutput.setKms(toDoubleDecimal(totalTime/secondsForOneKilo));
+				}
+
+				if(!crInput.getAllure().isEmpty()){//Calcul du temps à mettre pour cette distance à cette allure
+					double secondsForOneKilo = getTotSecs(crInput.getAllure());
+					crOutput.setKms(toDoubleDecimal(totalTime/secondsForOneKilo));
+				}
+			}
+			if(!crInput.getAllure().isEmpty()){//on a l'allure
+				crOutput.setAllure(crInput.getAllure());
+				double totSeconds = getTotSecs(crInput.getAllure());
+				crOutput.setVitesse(toDoubleDecimal(3600/totSeconds));
+			}
+			if(!crInput.getVitesse().isEmpty()){//on a la vitesse
+				crOutput.setVitesse(crInput.getVitesse());
 				double speed = toDouble(crInput.getVitesse());
 				double secondsForOneKilo = 3600 / speed;
-				double totalSecondForDistance = kms * secondsForOneKilo;
-				crOutput.setTemps(toTime(totalSecondForDistance));
-			}
-			if(!crInput.getAllure().isEmpty()){//Calcul du temps à mettre pour cette distance à cette allure
-				double secondsForOneKilo = getTotSecs(crInput.getAllure());
-				double totalSecondForDistance = kms * secondsForOneKilo;
-				crOutput.setTemps(toTime(totalSecondForDistance));
-			}
-			if(!crInput.getTemps().isEmpty()){ //Calcul vitesse et allures pour cette distance et ce temps
-				double secondsTotal = getTotSecs(crInput.getTemps());
-				double secondsForOneKilo = secondsTotal / kms;
-				crOutput.setVitesse(toDoubleDecimal(3600/secondsForOneKilo));
 				crOutput.setAllure(toTime(secondsForOneKilo));
 			}
-		}
-		if (!crInput.getTemps().isEmpty()){//on a le temps
-			crOutput.setTemps(crInput.getTemps());
-			double totalTime = getTotSecs(crInput.getTemps());
-			if(!crInput.getVitesse().isEmpty()){
-				double speed = toDouble(crInput.getVitesse());
-				double secondsForOneKilo = 3600 / speed;
-				crOutput.setKms(toDoubleDecimal(totalTime/secondsForOneKilo));
+			if(!crInput.getVma().isEmpty()){//calcul % VMA
+				if (!crOutput.getVitesse().isEmpty()){
+					double vma = toDouble(crInput.getVma());
+					double speed = toDouble(crOutput.getVitesse());
+					double pourcVMA = (speed / vma)*100;
+					crOutput.setPourcVMA(toDoubleDecimal(pourcVMA));
+				}
 			}
-
-			if(!crInput.getAllure().isEmpty()){//Calcul du temps à mettre pour cette distance à cette allure
-				double secondsForOneKilo = getTotSecs(crInput.getAllure());
-				crOutput.setKms(toDoubleDecimal(totalTime/secondsForOneKilo));
-			}
-		}
-		if(!crInput.getAllure().isEmpty()){//on a l'allure
-			crOutput.setAllure(crInput.getAllure());
-			double totSeconds = getTotSecs(crInput.getAllure());
-			crOutput.setVitesse(toDoubleDecimal(3600/totSeconds));
-		}
-		if(!crInput.getVitesse().isEmpty()){//on a la vitesse
-			crOutput.setVitesse(crInput.getVitesse());
-			double speed = toDouble(crInput.getVitesse());
-			double secondsForOneKilo = 3600 / speed;
-			crOutput.setAllure(toTime(secondsForOneKilo));
-		}
-		if(!crInput.getVma().isEmpty()){//calcul % VMA
-			if (!crOutput.getVitesse().isEmpty()){
-				double vma = toDouble(crInput.getVma());
-				double speed = toDouble(crOutput.getVitesse());
-				double pourcVMA = (speed / vma)*100;
-				crOutput.setPourcVMA(toDoubleDecimal(pourcVMA));
-			}
+		}catch(Exception ex){
+			crOutput.setMessage(ex.getMessage());
 		}
 		return crOutput;
 	}
-	
-	
+
+
 
 	/**
 	 * 

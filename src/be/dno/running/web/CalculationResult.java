@@ -1,12 +1,20 @@
 package be.dno.running.web;
 
 public class CalculationResult {
-	private String kms = "0";
-	private String allure = "0";
-	private String temps = "0";
-	private String vitesse = "0";
-	private String vma;
-	private String pourcVMA;
+	private String kms = "";
+	private String allure = "";
+	private String temps = "";
+	private String vitesse = "";
+	private String vma = "";
+	private String pourcVMA = "";
+	private String message = "";
+	
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
 	public String getKms() {
 		return kms;
 	}
